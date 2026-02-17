@@ -12,7 +12,9 @@ import {
 } from "@/components/ui/popover"
 import { ChevronDownIcon } from "lucide-react"
 
-export function DatePickerTime() {
+let exportTime:string|undefined, exportDate:  Date| undefined
+export default function DateTimePicker() {
+  const [time, setTime] = React.useState<string>("10:30:00")
   const [open, setOpen] = React.useState(false)
   const [date, setDate] = React.useState<Date | undefined>(undefined)
   return (
@@ -37,6 +39,7 @@ export function DatePickerTime() {
               captionLayout="dropdown"
               defaultMonth={date}
               onSelect={(date) => {
+                {console.log(date);exportDate=date;}
                 setDate(date)
                 setOpen(false)
               }}
@@ -47,13 +50,17 @@ export function DatePickerTime() {
       <Field className="w-32">
         <FieldLabel htmlFor="time-picker-optional">Time</FieldLabel>
         <Input
+
           type="time"
           id="time-picker-optional"
           step="1"
-          defaultValue="10:30:00"
+          defaultValue={time}
+          onChange={(e) => {setTime(e.target.value);console.log(e.target.value);exportTime=e.target.value}}
           className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
         />
       </Field>
     </FieldGroup>
   )
 }
+
+export {exportTime, exportDate}
