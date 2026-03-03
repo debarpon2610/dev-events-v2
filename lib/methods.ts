@@ -1,18 +1,17 @@
+import { prismaExtend } from "./prisma";
+
+
 
 async function returnTags(tags:string[]){
-    const { prismaExtend } = await import("./prisma");
-    console.log('got to returnTags function')
-    const tagObjs = [];
+
+    let tagObjs:{name:string}[]=[];
     for (let tag of tags){
-        let tagObj=await prismaExtend.tags.findUnique({where:{name:tag}})
-        if (tagObj===null){
-            tagObj=await prismaExtend.tags.create({data:{name:tag}})
-            console.log(`Created new tag: ${tagObj}`)
+        tagObjs.push({name: tag})
+        if (!(await prismaExtend.tags.findUnique({where:{name: tag}}))){
+            await prismaExtend.tags.create({data:{name: tag}})
         }
-        tagObjs.push(tagObj);
     }
-    console.log('Returning tag objects:', tagObjs);
-    return tagObjs;
+    return tags.map(tag => ({name: tag}));
 }
 
 function parseTags(tagsStr:string):string[]{
@@ -49,7 +48,6 @@ function slugGen(title:string):string{
                 
                 
                 const date=new Date(year, month - 1, day, hours, minutes)
-                console.log('Parsed DateTime:', date);
                 return date;
 }
 

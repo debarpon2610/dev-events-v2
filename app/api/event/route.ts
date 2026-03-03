@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prismaExtend } from '@/lib/prisma';
 import {parseTags, parseAgenda} from '@/lib/methods';
+import {Mode} from '@/generated/prisma/client';
 
 
 export async function POST(req: NextRequest) {
@@ -14,16 +15,20 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({message:'Invalid form data', error: errorMsg}, {status: 400});
         }
         
+
         let parsedTags: string[] = [];
-        let agendas: string[] = [];
+        let parsedAgendas: string[] = [];
         if (eventData.tags) {
             parsedTags=parseTags(eventData.tags);
         }
         if (eventData.agendas) {
-            agendas=parseAgenda(eventData.agendas);
+            parsedAgendas=parseAgenda(eventData.agendas);
         }
 
-        const createdEvent = await prismaExtend.event.create({data:{...eventData, tags:parsedTags, agendas:agendas} as any});
+        const {tags, agendas, ...eventDataWithoutTagsAndAgendas} = eventData;
+        
+
+        const createdEvent = await prismaExtend.event.create({data:{...eventDataWithoutTagsAndAgendas, tags:parsedTags, agendas:parsedAgendas} }as any);
         return NextResponse.json({message:'Event created successfully', event:createdEvent}, {status: 201});
     
     } catch (e: unknown) {

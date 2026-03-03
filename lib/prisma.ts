@@ -1,11 +1,11 @@
-import { PrismaClient } from "@/generated/prisma/client";
+import { Mode, PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import { returnTags, parseToDateTime, slugGen } from "./methods";
 
 
-/*
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const pool=new Pool({connectionString: process.env.DATABASE_URL})
+const adapter = new PrismaPg(pool);
 // Step 1: Define the singleton function
 const prismaClientSingleton = () => {
   const ExtendedClient = new PrismaClient({ adapter }).$extends({
@@ -15,18 +15,22 @@ const prismaClientSingleton = () => {
 
           const generatedSlug = slugGen(args.data.title);
           const dateTime = parseToDateTime(args.data.date, args.data.time);
-          const tagObjs=await returnTags(args.data.tags)
+          const tagsObj = await returnTags(args.data.tags);
 
-
-
-          const {tags, date, time, ...newData } = args.data
+          const { tags, date, time, ...newData } = args.data
           newData.slug=generatedSlug;
           newData.date=dateTime;
-          newData.tags=tagObjs
+          
+          const simplify=tagsObj.map((tag:{name:string})=>({where:tag, create:tag}))
+          newData.tags={connectOrCreate:simplify}
 
-          console.log(newData)
-          console.log('going to query successfully. No error before this')
-          return query(...args, { data: newData })
+          //DRY TESTS:
+          /*console.log(typeof newData.mode)
+          console.log('Data being sent to Prisma:', newData);
+          console.log('going to query successfully. No error before this')*/
+          
+          const results= await query({ data: newData , include:{tags:true}})
+          return results
         }
       },
     }
@@ -51,15 +55,6 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export { prismaExtend }
-*/
 
 
-//CLEAN SLATE
-const pool = new PrismaPg({ connectionString: process.env.DATABASE_URL! , idleTimeoutMillis: 60000,})
-const prisma = new PrismaClient({ adapter: pool })
 
-const globalForPrisma = global as unknown as { prisma: typeof prisma }
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
-
-export default prisma
