@@ -1,7 +1,9 @@
+import {v2 as cloudinary} from 'cloudinary';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prismaExtend } from '@/lib/prisma';
 import {parseTags, parseAgenda} from '@/lib/methods';
-import {Mode} from '@/generated/prisma/client';
+
 
 
 export async function POST(req: NextRequest) {
@@ -24,6 +26,21 @@ export async function POST(req: NextRequest) {
         if (eventData.agendas) {
             parsedAgendas=parseAgenda(eventData.agendas);
         }
+
+        let file=eventData.image as unknown as File;
+
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const uploadResult = await new Promise((resolve, reject) => {
+            cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
+                if (error) 
+                    reject(error);
+                resolve(result)
+            }).end(buffer);
+        });
+
+        eventData.image=(uploadResult as {secure_url:string}).secure_url;
+
 
         const {tags, agendas, ...eventDataWithoutTagsAndAgendas} = eventData;
         
