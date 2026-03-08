@@ -4,7 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prismaExtend } from '@/lib/prisma';
 import {parseTags, parseAgenda} from '@/lib/methods';
 
-
+export async function DELETE() {
+    const deleted = await prismaExtend.event.deleteMany({});
+    return NextResponse.json({message: `Deleted ${deleted.count} events`}, {status: 200});
+}
 
 export async function POST(req: NextRequest) {
     try {
